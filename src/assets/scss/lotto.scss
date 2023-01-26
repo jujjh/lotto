@@ -1,0 +1,60 @@
+.gameBox {
+  display: flex;
+  flex-direction: column;
+  height: auto;
+  .top {
+    display: flex;
+    gap: 10px;
+    font-size: 20px;
+    font-weight: 500;
+    select {
+      width: 80px;
+      border-radius: 4px;
+    }
+    .bt {
+      display: flex;
+      align-items: center;
+      background: var(--color-primary);
+      padding: 0 10px;
+      font-size: 17px;
+      line-height: 1;
+      font-weight: 400;
+      border-radius: 4px;
+      color: #fff;
+      cursor: pointer;
+    }
+  }
+}
+[class*=Balls] {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  margin: 30px 0;
+  border: 2px solid #ddd;
+  border-radius: 5px;
+  padding: 10px;
+  &.complete {
+    border-color: var(--color-primary);
+    background: #fafafa;
+  }
+  span {
+    display:flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    line-height: normal;
+    text-align: center;
+    border-radius: 50%;
+    color:#fff;
+    text-align:center;
+    font-size: 17px;
+    vertical-align: top;
+    text-shadow:1px 1px 3px rgba(0,0,0,0.5);
+  }
+  .ball_type1 {background: #f2b720;}
+  .ball_type2 {background: #4072ac;}
+  .ball_type3 {background: #de4c0e;}
+  .ball_type4 {background: #9195a4;}
+  .ball_type5 {background: #13be4b;}
+}

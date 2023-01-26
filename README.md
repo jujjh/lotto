@@ -1,19 +1,8 @@
 # lotto
 
-## Project setup
-```
-npm install
-```
-
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
-
-### Compiles and minifies for production
-```
-npm run build
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+## 조건
+1. “로또 번호 받기” 버튼을 클릭하면 6개의 중복되지 않는 번호를 생성하여 보여 줘야 한다.
+2. 최대 5쌍의 번호 나열을 할 수 있도록 버튼 왼쪽에 숫자 입력 창을 배치 한다.
+3. 번호는 왼쪽에서 부터 오른쪽으로 오름 차순으로 정렬한다.
+4. 번호는 한꺼번에 보여주지 않고 1부터 45까지 빠른 속도로 변경되다가 한개의 숫자씩 보여 줘야 한다.
+5. 번호를 생성하는 방식은 본인 만의 알고리즘을 작성하되 최소 3개 이상의 로직이 있어야 한다.
