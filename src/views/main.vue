@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import type { Ref } from 'vue'
+import AnimateBall from '@/components/AnimateBall.vue'
 
 let setCount: Ref<string> = ref('0')
 
@@ -25,20 +26,7 @@ interface Ball {
   animate: boolean
 }
 let selectedBalls: Ref<Array<Ball[]>> = ref([])
-let animateBalls: Ref<Array<Ball[]>> = ref([])
 let loadingText: Ref<boolean[]> = ref([])
-
-let lottoInterval = null
-const stratAnimation = (): void => {
-  lottoInterval = setInterval(() => {
-    for (let i = 0; i < Number(setCount.value); i ++) {
-      for (let j = 0; j < 5; j ++) {
-        let number: number = animateBalls.value[i][j].value
-        animateBalls.value[i][j].value = number === 45 ? 1 : number + 1
-      }
-    }
-  }, 50)
-}
 
 const endAnimation = () => {
   for (let i = 0; i < Number(setCount.value); i ++) {
@@ -62,12 +50,9 @@ const selecter = (): void => {
       .map((item, index) => {
         let obj: Ball = {value:0, animate:true}
         obj.value = index + 1
-        obj.animate = true
         return obj
       })
       .sort(() => Math.random() - 0.5)
-    console.log(numberList)
-  animateBalls.value.push([...numberList.splice(0,5).sort((a: Ball,b: Ball) => a.value-b.value)])
   selectedBalls.value.push([...numberList.splice(0,5).sort((a: Ball,b: Ball) => a.value-b.value)])
 }
 
@@ -75,10 +60,9 @@ const loop = (n: number): void => {
   selectedBalls.value = []
   for (let i = 0; i < n; i++){
     selecter()
-    stratAnimation()
     loadingText.value.push(true)
   }
-  setTimeout(endAnimation, 2000)
+  endAnimation()
 }
 
 const start = (): void => {
@@ -125,11 +109,7 @@ const start = (): void => {
               {{ num.value }}
             </span>
 
-            <span
-              :class="['ball', colorCheck(animateBalls[setIndex][ballIndex].value)]"
-              v-else>
-              {{ animateBalls[setIndex][ballIndex].value }}
-            </span>
+            <AnimateBall :num="num.value" v-else />
 
           </template>
         </div>
