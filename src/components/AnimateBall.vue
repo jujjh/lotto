@@ -1,23 +1,33 @@
 <script setup lang="ts">
-import { ref, defineProps } from 'vue'
+import { ref, defineProps, defineEmits } from 'vue'
 import type { Ref } from 'vue'
+
+const emit = defineEmits(['done'])
 
 interface Props {
   num: number
+  setIndex: number
+  ballIndex: number
 }
 
-const props = defineProps<Props>()
-
+const { num , setIndex, ballIndex } = defineProps<Props>()
+let isAnimateBall = ref(true)
 let number: Ref<number> = ref(0)
-number.value = props.num
+number.value = num
 
 let lottoInterval = setInterval((): void => {
   number.value = number.value === 45 ? 1 : number.value + 1
 }, 50)
 
-setTimeout((): void => {
+setTimeout(() => {
+  isAnimateBall.value = false
   clearInterval(lottoInterval)
-}, 3000)
+
+  if( ballIndex === 5) {
+    emit('done', setIndex)
+  }
+
+}, ((setIndex + 1) * 2000) + ((ballIndex) * 300))
 
 const colorCheck = (num: number): string  => {
   if (num < 11) {
@@ -32,13 +42,19 @@ const colorCheck = (num: number): string  => {
     return 'ball_type5'
   }
 }
-
 </script>
 
 <template>
 
-  <span :class="['ball', colorCheck(number)]">
+  <span
+    :class="['ball', colorCheck(number)]"
+    v-if="isAnimateBall">
     {{ number }}
+  </span>
+  <span
+    :class="['ball', colorCheck(num)]"
+    v-else>
+    {{ num }}
   </span>
 
 </template>
