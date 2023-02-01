@@ -5,19 +5,16 @@ import AnimateBall from '@/components/AnimateBall.vue'
 
 let setCount: Ref<string> = ref('0')
 
-interface Ball {
-  value: number
-}
-let selectedBalls: Ref<Array<Ball[]>> = ref([])
+let selectedBalls: Ref<Array<number[]>> = ref([])
 let loadingText: Ref<boolean[]> = ref([])
 
 const selecter = (): void => {
-  let numberList: Ball[] =
+  let numberList: Array<number> =
     Array(45)
       .fill(0)
       .map((item, index) => item = index+1)
       .sort(() => Math.random() - 0.5)
-  selectedBalls.value.push([...numberList.splice(0,6).sort((a: Ball,b: Ball) => a-b)])
+  selectedBalls.value.push([...numberList.splice(0,6).sort((a: number,b: number) => a-b)])
 }
 
 const loop = (n: number): void => {
@@ -41,7 +38,7 @@ const start = (): void => {
 
 }
 
-const animateBallDone = (index) => {
+const animateBallDone = (index: number) => {
   loadingText.value[index] = false
 }
 
