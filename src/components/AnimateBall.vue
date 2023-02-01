@@ -15,7 +15,7 @@ let isAnimateBall = ref(true)
 let number: Ref<number> = ref(0)
 number.value = num
 
-let lottoInterval = setInterval((): void => {
+let lottoInterval = setInterval(() => {
   number.value = number.value === 45 ? 1 : number.value + 1
 }, 50)
 
@@ -23,24 +23,19 @@ setTimeout(() => {
   isAnimateBall.value = false
   clearInterval(lottoInterval)
 
-  if( ballIndex === 5) {
+  if (ballIndex === 5) {
     emit('done', setIndex)
   }
 
 }, ((setIndex + 1) * 2000) + ((ballIndex) * 300))
 
 const colorCheck = (num: number): string  => {
-  if (num < 11) {
-    return 'ball_type1'
-  } else if (num < 21) {
-    return 'ball_type2'
-  } else if (num < 31) {
-    return 'ball_type3'
-  } else if (num < 41) {
-    return 'ball_type4'
-  } else {
-    return 'ball_type5'
+  let n: string = num.toString()
+  let type: string = '5'
+  if (n.length > 1) {
+    type = n.substring(0,1)
   }
+  return `ball_type${type}`
 }
 </script>
 
