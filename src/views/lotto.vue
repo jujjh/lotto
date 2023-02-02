@@ -9,12 +9,42 @@ let selectedBalls: Ref<Array<number[]>> = ref([])
 let loadingText: Ref<boolean[]> = ref([])
 
 const selecter = (): void => {
-  let numberList: Array<number> =
-    Array(45)
-      .fill(0)
-      .map((item, index) => item = index+1)
-      .sort(() => Math.random() - 0.5)
-  selectedBalls.value.push([...numberList.splice(0,6).sort((a: number,b: number) => a-b)])
+  let selectNumberList: number[] = []
+  let numberList: Array<number> = new Array(45).fill(0).map((item, index) => item = index+1)
+
+
+  let index = 0
+  const numberValidation = () => {
+
+    selectNumberList = [...numberList.sort(() => Math.random() - 0.5).splice(0,6).sort((a: number,b: number) => a-b)]
+
+    let oddOrEven: string[] = []
+    let sequenceSize = 0
+    let sequence: boolean[] = []
+    let numberArea: number[] = new Array(5).fill(0)
+
+    selectNumberList.forEach((item, index) => {
+      oddOrEven.push(item % 2 ? 'odd' : 'even')
+
+      let numberAreaIndex = item.toString().length === 2 ?  Number(item.toString().substring(0,1)) : 0
+      numberArea[numberAreaIndex]  += 1
+
+      if (index === 1) {
+        sequenceSize = item - selectNumberList[index-1]
+      } else if (index > 1) {
+        sequence.push(sequenceSize === item - selectNumberList[index-1] ? true : false)
+      }
+    })
+
+    if (Math.max(...numberArea) >= 4 ||
+      selectNumberList[0] > 30 || selectNumberList[5] < 15 ||
+      [...new Set(oddOrEven)].length === 1 ||
+      sequence.indexOf(false) === -1 ) {
+      numberValidation()
+    }
+  }
+  numberValidation()
+  selectedBalls.value.push(selectNumberList)
 }
 
 const loop = (n: number): void => {
