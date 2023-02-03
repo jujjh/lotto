@@ -1,4 +1,5 @@
 .gameBox {
+  position: relative;
   display: flex;
   justify-content: space-between;
   .btn {
@@ -17,15 +18,22 @@
     justify-content: center;
     width: calc(100% - 530px);
     h2 {
+      margin: 0;
       font-size: 23px;
       text-align: center;
+      &.num {
+        font-size: 70px;
+      }
     }
     .btn {
       font-size:20px;
     }
   }
   .bingoArea {
-
+    .top {
+      display: flex;
+      flex-direction: row-reverse;
+    }
     .cardList{
       display: flex;
       flex-wrap: wrap;
@@ -47,6 +55,11 @@
         color: #666;
         font-weight: 300;
         background-color: var(--color-bg1);
+        &.bingo {
+          animation-name: bingo;
+          animation-duration: 1s;
+          animation-fill-mode: forwards;
+        }
         .selected {
           position: absolute;
           top: 0;
@@ -63,6 +76,7 @@
             height: 6px;
             border-radius: 3px;
             background-color: red;
+            opacity: 0;
             content: '';
           }
           &::before {
@@ -71,10 +85,27 @@
           &::after {
             transform: rotate(45deg);
           }
+
+          &.check::before{
+            opacity: 1;
+            transition: all 0.3s 0.1s;
+          }
+          &.check::after {
+            opacity: 1;
+            transition: all 0.2s;
+          }
         }
       }
     }
-
   }
+}
 
+@keyframes bingo {
+  0% { background: var(--color-bg1);}
+  10% { background: var(--color-red-bg);}
+  20% { background: var(--color-bg1);}
+  30% { background: var(--color-red-bg);}
+  40% { background: var(--color-bg1);}
+  50% { background: var(--color-red-bg);}
+  100% { background: var(--color-red-bg);}
 }
