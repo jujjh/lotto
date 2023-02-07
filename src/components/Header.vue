@@ -3,7 +3,7 @@
     <h3></h3>
     <ul>
       <li><router-link to="/">로또 번호 생성기</router-link></li>
-      <li><router-link to="/bingo">bingo</router-link></li>
+      <li><router-link to="/bingo">빙고</router-link></li>
     </ul>
   </header>
 </template>

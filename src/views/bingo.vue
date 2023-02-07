@@ -12,7 +12,7 @@ interface BingoList {
 
 let numberList = ref<BingoList[]>([])
 let isPlay = ref<boolean>(false)
-let isGameEnd = ref<boolean>(true)
+let isGameEnd = ref<boolean>(false)
 
 
 let drawNumber = ref<number>(0)
@@ -25,9 +25,9 @@ const bingoRow = ref<number[]>([])
 const bingoDiagonal = ref<string[]>([])
 
 watchEffect(() => {
-  if (bingoCount.value >= 1) {
+  if (bingoCount.value >= 3) {
     setTimeout(() => {
-      isGameEnd.value = false
+      isGameEnd.value = true
     }, 300)
   }
 })
@@ -275,7 +275,7 @@ init()
 
 const reStart = () => {
   isPlay.value = false
-  isGameEnd.value = true
+  isGameEnd.value = false
   init()
   suffle()
 }
@@ -285,7 +285,7 @@ const reStart = () => {
   <h1>빙고</h1>
   <div class="gameBox bingo">
 
-    <div class="reStart" v-if="!isGameEnd">
+    <div class="reStart" v-if="isGameEnd">
       <h2>🎉게임 클리어</h2>
       <div class="btn" @click="reStart()">
         <font-awesome-icon icon="fa-solid fa-rotate-right" />
