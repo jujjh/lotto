@@ -10,6 +10,9 @@
     font-weight: 700;
     background: var(--color-primary);
     cursor: pointer;
+    &.disable {
+      background-color: var(--color-gray);
+    }
   }
   .drawArea{
     display: flex;
