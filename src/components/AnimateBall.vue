@@ -2,7 +2,7 @@
 import { ref, defineProps, defineEmits } from 'vue'
 import type { Ref } from 'vue'
 
-const emit = defineEmits(['done'])
+const emit = defineEmits(["update:done"])
 
 interface Props {
   num: number
@@ -10,12 +10,12 @@ interface Props {
   ballIndex: number
 }
 
-const { num , setIndex, ballIndex } = defineProps<Props>()
+const porps = defineProps<Props>()
 let isAnimateBall = ref(true)
 let number: Ref<number> = ref(0)
-number.value = num
+number.value = porps.num
 
-let lottoInterval = setInterval(() => {
+let lottoInterval = setInterval((): void => {
   number.value = number.value === 45 ? 1 : number.value + 1
 }, 50)
 
@@ -23,11 +23,11 @@ setTimeout(() => {
   isAnimateBall.value = false
   clearInterval(lottoInterval)
 
-  if (ballIndex === 5) {
-    emit('done', setIndex)
+  if (porps.ballIndex === 5) {
+    emit("update:done", porps.setIndex)
   }
 
-}, ((setIndex + 1) * 2000) + ((ballIndex) * 300))
+}, ((porps.setIndex + 1) * 2000) + ((porps.ballIndex) * 300))
 
 const colorCheck = (num: number): string  => {
   let n: string = num.toString()

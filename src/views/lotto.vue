@@ -16,7 +16,8 @@ const selecter = (): void => {
   let index = 0
   const numberValidation = () => {
 
-    selectNumberList = [...numberList.sort(() => Math.random() - 0.5).splice(0,6).sort((a: number,b: number) => a-b)]
+    selectNumberList =
+      [...numberList.sort(() => Math.random() - 0.5).splice(0,6).sort((a: number,b: number) => a-b)]
 
     let oddOrEven: string[] = []
     let sequenceSize = 0
@@ -98,7 +99,7 @@ const animateBallDone = (index: number) => {
         <div :class="['lottoBalls', { complete: !loadingText[setIndex] }]"  v-if="selectedBalls">
           <h3>{{ loadingText[setIndex] ?  '생성중..' : '생성완료' }}</h3>
           <template  v-for="(num, ballIndex) in set" :key="`number-${ballIndex}`">
-            <AnimateBall :num="num" :setIndex="setIndex" :ballIndex="ballIndex" @done="animateBallDone" />
+            <AnimateBall :num="num" :setIndex="setIndex" :ballIndex="ballIndex" @update:done="animateBallDone" />
           </template>
         </div>
       </template>
