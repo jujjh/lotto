@@ -12,20 +12,8 @@ interface BingoList {
 
 let numberList = ref<BingoList[]>([])
 let isPlay = ref<boolean>(false)
-let isGameEnd = ref<boolean>(false)
-const suffle = (): void => {
-  if (!isPlay.value) {
-    numberList.value.sort(() => Math.random() - 0.8)
-    isPlay.value = true
-  } else {
-    let result = confirm('게임중입니다! 게임을 다시 시작하시겠습니까?')
-    if (result) {
-      isPlay.value = false
-      init()
-      suffle()
-    }
-  }
-}
+let isGameEnd = ref<boolean>(true)
+
 
 let drawNumber = ref<number>(0)
 let drawList = ref<number[]>([])
@@ -36,15 +24,54 @@ const bingoColumn = ref<number[]>([])
 const bingoRow = ref<number[]>([])
 const bingoDiagonal = ref<string[]>([])
 
-
-
 watchEffect(() => {
-  if (bingoCount.value >= 3) {
+  if (bingoCount.value >= 1) {
     setTimeout(() => {
-      alert('게임끝~')
+      isGameEnd.value = false
     }, 300)
   }
 })
+
+const suffle = (): void => {
+  if (!isPlay.value) {
+
+    const suffleCheck = () => {
+      let before = numberList.value
+      let after = [...numberList.value].sort(() => Math.random() - 0.5)
+
+      for(let i = 0; i < 25; i ++) {
+        if (before[i].value === after[i].value) {
+          if (i === 0) {
+            after.push(after[i])
+            after.splice(i, 1)
+            i--
+
+          } else {
+            after.splice(i-1, 2, after[i], after[i-1])
+          }
+        }
+      }
+
+      numberList.value = after
+    }
+
+    suffleCheck()
+    for(let i = 0; i < 4; i ++) {
+      setTimeout(() => {
+        suffleCheck()
+      }, (i+ 1) * 500)
+    }
+
+    isPlay.value = true
+  } else {
+    let result = confirm('게임중입니다! 게임을 다시 시작하시겠습니까?')
+    if (result) {
+      isPlay.value = false
+      init()
+      suffle()
+    }
+  }
+}
 
 /**
  * 빙고가 됐을때 해당 값의 isBingo를 true로 바꿔주는 함수
@@ -146,7 +173,6 @@ const diagonalValidation = (flag: string) => {
 
 /**
  * 뽑힌 번호가 5개 이상일 때 1차 검증 후 상황에 맞게 검증함수로 넘겨주는 함수
- *
  */
 const bingoCheck = (): void => {
   drawIndexList.value.sort((a,b) => a-b)
@@ -156,6 +182,7 @@ const bingoCheck = (): void => {
       if (i < 5 && drawIndexList.value.indexOf(i) !== -1) {
         columnValidation(i)
       }
+
       if (drawIndexList.value.indexOf(i * 5) !== -1) {
         rowValidation(i * 5)
       }
@@ -171,6 +198,10 @@ const bingoCheck = (): void => {
 
   }
 }
+
+/**
+ * 빙고판에 X 표시
+ */
 const selectCheck = () => {
   drawList.value.push(drawNumber.value)
   let index: number = 0
@@ -214,6 +245,7 @@ const cardClick = (): void => {
     }
     random()
   }
+
   random()
   animateNumber(number)
 }
@@ -240,26 +272,25 @@ const init = (): void => {
   numberList.value = number
 }
 init()
+
+const reStart = () => {
+  isPlay.value = false
+  isGameEnd.value = true
+  init()
+  suffle()
+}
 </script>
 
 <template>
   <h1>빙고</h1>
   <div class="gameBox bingo">
 
-    <div class="reStart" v-if="isGameEnd">
+    <div class="reStart" v-if="!isGameEnd">
       <h2>🎉게임 클리어</h2>
-      <div class="btn" @click="init()">
+      <div class="btn" @click="reStart()">
         <font-awesome-icon icon="fa-solid fa-rotate-right" />
         다시 시작
       </div>
-    </div>
-
-    <div class="fireworks">
-      <span class="firework1"></span>
-      <span class="firework2"></span>
-      <span class="firework3"></span>
-      <span class="firework4"></span>
-      <span class="firework5"></span>
     </div>
 
     <!-- <BingoAnimateNumber /> -->
@@ -305,7 +336,7 @@ init()
 
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.5s ease;
+  transition: opacity 0.5s 1s ease;
 }
 
 .fade-enter-from,
@@ -315,6 +346,11 @@ init()
 
 
 .v-move {
-  transition: transform 1s;
+  // @for $i from 0 through 24 {
+  //   &:nth-child(#{$i}) {
+  //     transition-delay: ($i * 0.02s);
+  //   }
+  // }
+  transition: transform 0.4s;
 }
 </style>

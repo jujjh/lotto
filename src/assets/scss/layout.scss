@@ -20,7 +20,7 @@ header {
   .gameBox {
     position: relative;
     width: 800px;
-    min-height: 630px;
+    min-height: 500px;
     padding: 20px;
     margin-bottom: 100px;
     background: #fff;
@@ -32,6 +32,7 @@ header {
       bottom: 20%;
       left: 20%;
       right: 20%;
+      z-index: 10;
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -45,12 +46,18 @@ header {
         font-size: 30px;
       }
       .btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
         padding: 5px 0;
         font-size:20px;
         border-radius: 5px;
         background: var(--color-primary);
         color:#fff;
         cursor: pointer;
+        svg {
+          margin-right: 10px;
+        }
       }
     }
   }
