@@ -1,8 +1,5 @@
 <script setup lang="ts">
 import { ref, watchEffect } from 'vue'
-import { useStore } from 'vuex'
-
-const store = useStore()
 
 interface BingoList {
   value: number
@@ -10,15 +7,15 @@ interface BingoList {
   isBingo: boolean
 }
 
-let COLS: number = 6
-let TOTAL_COUNT: number = Math.pow(COLS,2)
+const COLS: number = 6
+const TOTAL_COUNT: number = COLS ** 2
 
-let COL: string = 'col'
-let ROW: string = 'row'
-let LEFT: string = 'L'
-let RIGHT: string = 'R'
+const COL: string = 'col'
+const ROW: string = 'row'
+const LEFT: string = 'L'
+const RIGHT: string = 'R'
 
-let cardSize = ref({
+const cardSize = ref({
   width: `calc((100% - (${(COLS - 1) * 5}px))  / ${COLS})`,
   height: `calc((100% - (${(COLS - 1) * 5}px))  / ${COLS})`,
 })
@@ -87,7 +84,7 @@ const shuffle = (): void => {
 /**
  * 빙고가 됐을때 해당 값의 isBingo를 true로 바꿔주는 함수
  */
-const bingoEffect = (flag: string, index: number = 0): void => {
+const isBingoValueChange = (flag: string, index: number = 0): void => {
   if (flag === COL) {
     for (let i = 0; i < COLS; i++) {
       numberList.value[index + (i * COLS)].isBingo = true
@@ -127,7 +124,7 @@ const columnValidation = (idx: number): void => {
   if (isBingo && bingoColumn.value.indexOf(idx) === -1) {
     bingoCount.value ++
     bingoColumn.value.push(idx)
-    bingoEffect(COL, idx)
+    isBingoValueChange(COL, idx)
   }
 }
 
@@ -147,7 +144,7 @@ const rowValidation = (idx: number): void => {
   if (isBingo && bingoRow.value.indexOf(idx) === -1) {
     bingoCount.value ++
     bingoRow.value.push(idx)
-    bingoEffect(ROW, idx)
+    isBingoValueChange(ROW, idx)
   }
 }
 
@@ -177,7 +174,7 @@ const diagonalValidation = (flag: string): void => {
   if (isBingo && bingoDiagonal.value.indexOf(flag) === -1) {
     bingoCount.value ++
     bingoDiagonal.value.push(flag)
-    bingoEffect(flag)
+    isBingoValueChange(flag)
   }
 }
 
@@ -213,7 +210,7 @@ const bingoCheck = (): void => {
 /**
  * 빙고판에 X 표시
  */
-const selectCheck = (): void => {
+const selectedValueChange = (): void => {
   drawList.value.push(drawNumber.value)
   let index: number = 0
   numberList.value.map((item, i) => {
@@ -237,12 +234,12 @@ const animateNumber = (n: number): void => {
 
   setTimeout(() => {
     clearInterval(interval)
-    selectCheck()
+    selectedValueChange()
     bingoCheck()
   }, time);
 }
 
-const cardClick = (): void => {
+const getDrawNumber = (): void => {
   let number: number = 0
 
   number = Math.floor(Math.random() * TOTAL_COUNT + 1)
@@ -250,7 +247,7 @@ const cardClick = (): void => {
     animateNumber(number)
     return
   }
-  cardClick()
+  getDrawNumber()
 }
 
 const init = (): void => {
@@ -296,8 +293,6 @@ const reStart = (): void => {
       </div>
     </div>
 
-    <!-- <BingoAnimateNumber /> -->
-
     <div class="drawArea">
       <Transition name="fade" mode="out-in">
         <template v-if="!isPlay">
@@ -308,7 +303,7 @@ const reStart = (): void => {
             <h2 class="num">
               {{ drawNumber }}
             </h2>
-            <div class="btn" @click="cardClick">번호 뽑기</div>
+            <div class="btn" @click="getDrawNumber">번호 뽑기</div>
           </div>
         </template>
       </Transition>
