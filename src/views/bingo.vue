@@ -25,8 +25,8 @@ let isPlay = ref<boolean>(false)
 let isGameEnd = ref<boolean>(false)
 
 let drawNumber = ref<number>(0)
-let drawList = ref<number[]>([])
-let drawIndexList = ref<number[]>([])
+let drawList: number[] = []
+let drawIndexList: number[] = []
 
 const bingoCount = ref<number>(0)
 const bingoColumn = ref<number[]>([])
@@ -115,7 +115,7 @@ const columnValidation = (idx: number): void => {
   let isBingo: boolean = true
 
   for (let i = 0; i < COLS; i++) {
-    if (drawIndexList.value.indexOf(idx+(i * COLS)) === -1) {
+    if (drawIndexList.indexOf(idx+(i * COLS)) === -1) {
       isBingo = !isBingo
       break
     }
@@ -135,7 +135,7 @@ const rowValidation = (idx: number): void => {
   let isBingo: boolean = true
 
   for (let i = 0; i < COLS; i++)  {
-    if (drawIndexList.value.indexOf(idx + i) === -1) {
+    if (drawIndexList.indexOf(idx + i) === -1) {
       isBingo = !isBingo
       break
     }
@@ -156,7 +156,7 @@ const diagonalValidation = (flag: string): void => {
 
   if (flag === LEFT) {
     for (let i = 0; i < COLS; i++) {
-      if (drawIndexList.value.indexOf(i * (COLS + 1)) === -1) {
+      if (drawIndexList.indexOf(i * (COLS + 1)) === -1) {
         isBingo = !isBingo
         break
       }
@@ -164,7 +164,7 @@ const diagonalValidation = (flag: string): void => {
 
   } else {
     for (let i = 0; i < COLS; i++)  {
-      if (drawIndexList.value.indexOf((i + 1) * (COLS - 1)) === -1) {
+      if (drawIndexList.indexOf((i + 1) * (COLS - 1)) === -1) {
         isBingo = !isBingo
         break
       }
@@ -183,24 +183,24 @@ const diagonalValidation = (flag: string): void => {
  * 뽑힌 번호가 5개 이상일 때 1차 검증 후 상황에 맞게 검증함수로 넘겨주는 함수
  */
 const bingoCheck = (): void => {
-  drawIndexList.value.sort((a, b) => a - b)
+  drawIndexList.sort((a, b) => a - b)
 
-  if (drawIndexList.value.length >= COLS) {
-    for(let i = 0; i < drawIndexList.value.length; i++) {
-      if (i < COLS && drawIndexList.value.indexOf(i) !== -1) {
+  if (drawIndexList.length >= COLS) {
+    for(let i = 0; i < COLS; i++) {
+      if (i < COLS && drawIndexList.indexOf(i) !== -1) {
         columnValidation(i)
       }
 
-      if (drawIndexList.value.indexOf(i * COLS) !== -1) {
+      if (drawIndexList.indexOf(i * COLS) !== -1) {
         rowValidation(i * COLS)
       }
     }
 
-    if (drawIndexList.value.indexOf(COLS + 1) !== -1 && drawIndexList.value.indexOf(0) !== -1) {
+    if (drawIndexList.indexOf(COLS + 1) !== -1 && drawIndexList.indexOf(0) !== -1) {
       diagonalValidation(LEFT)
     }
 
-    if (drawIndexList.value.indexOf(Math.floor((COLS * 2) - 2)) !== -1 && drawIndexList.value.indexOf((COLS - 1)) !== -1) {
+    if (drawIndexList.indexOf(Math.floor((COLS * 2) - 2)) !== -1 && drawIndexList.indexOf((COLS - 1)) !== -1) {
       diagonalValidation(RIGHT)
     }
 
@@ -211,7 +211,7 @@ const bingoCheck = (): void => {
  * 빙고판에 X 표시
  */
 const selectedValueChange = (): void => {
-  drawList.value.push(drawNumber.value)
+  drawList.push(drawNumber.value)
   let index: number = 0
   numberList.value.map((item, i) => {
     if (item.value === drawNumber.value) {
@@ -219,7 +219,7 @@ const selectedValueChange = (): void => {
       index = i
     }
   })
-  drawIndexList.value.push(index)
+  drawIndexList.push(index)
 }
 
 /**
@@ -243,7 +243,7 @@ const getDrawNumber = (): void => {
   let number: number = 0
 
   number = Math.floor(Math.random() * TOTAL_COUNT + 1)
-  if (drawList.value.indexOf(number) === -1) {
+  if (drawList.indexOf(number) === -1) {
     animateNumber(number)
     return
   }
@@ -253,8 +253,8 @@ const getDrawNumber = (): void => {
 const init = (): void => {
   numberList.value = []
   drawNumber.value = 0
-  drawList.value = []
-  drawIndexList.value = []
+  drawList = []
+  drawIndexList = []
 
   bingoCount.value = 0
   bingoColumn.value = []
@@ -344,11 +344,6 @@ const reStart = (): void => {
 
 
 .v-move {
-  // @for $i from 0 through 24 {
-  //   &:nth-child(#{$i}) {
-  //     transition-delay: ($i * 0.02s);
-  //   }
-  // }
   transition: transform 0.4s;
 }
 </style>
