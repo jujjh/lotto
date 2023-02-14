@@ -7,7 +7,7 @@ interface BingoList {
   isBingo: boolean
 }
 
-const COLS: number = 6
+const COLS: number = 4
 const TOTAL_COUNT: number = COLS ** 2
 
 const COL: string = 'col'
@@ -28,10 +28,10 @@ let drawNumber = ref<number>(0)
 let drawList: number[] = []
 let drawIndexList: number[] = []
 
-const bingoCount = ref<number>(0)
-const bingoColumn = ref<number[]>([])
-const bingoRow = ref<number[]>([])
-const bingoDiagonal = ref<string[]>([])
+let bingoCount = ref<number>(0)
+let bingoColumn: number[] = []
+let bingoRow: number[] = []
+let bingoDiagonal: string[] = []
 
 watchEffect(() => {
   if (bingoCount.value >= 4) {
@@ -121,9 +121,9 @@ const columnValidation = (idx: number): void => {
     }
   }
 
-  if (isBingo && bingoColumn.value.indexOf(idx) === -1) {
+  if (isBingo && bingoColumn.indexOf(idx) === -1) {
     bingoCount.value ++
-    bingoColumn.value.push(idx)
+    bingoColumn.push(idx)
     isBingoValueChange(COL, idx)
   }
 }
@@ -141,9 +141,9 @@ const rowValidation = (idx: number): void => {
     }
   }
 
-  if (isBingo && bingoRow.value.indexOf(idx) === -1) {
+  if (isBingo && bingoRow.indexOf(idx) === -1) {
     bingoCount.value ++
-    bingoRow.value.push(idx)
+    bingoRow.push(idx)
     isBingoValueChange(ROW, idx)
   }
 }
@@ -171,9 +171,9 @@ const diagonalValidation = (flag: string): void => {
     }
   }
 
-  if (isBingo && bingoDiagonal.value.indexOf(flag) === -1) {
+  if (isBingo && bingoDiagonal.indexOf(flag) === -1) {
     bingoCount.value ++
-    bingoDiagonal.value.push(flag)
+    bingoDiagonal.push(flag)
     isBingoValueChange(flag)
   }
 }
@@ -257,9 +257,9 @@ const init = (): void => {
   drawIndexList = []
 
   bingoCount.value = 0
-  bingoColumn.value = []
-  bingoRow.value = []
-  bingoDiagonal.value = []
+  bingoColumn = []
+  bingoRow = []
+  bingoDiagonal = []
 
   let number: BingoList[] =
     new Array(TOTAL_COUNT)
@@ -314,7 +314,7 @@ const reStart = (): void => {
         <div :class="['btn', {disable : isPlay}]" @click="shuffle">빙고 번호 섞기</div>
       </div>
       <div class="cardList">
-        <transition-group>
+        <TransitionGroup>
           <template
             :key="`number-${card.value}`"
             v-for="card in numberList">
@@ -323,7 +323,7 @@ const reStart = (): void => {
               <div class="selected" :class="{ check: card.selected }"></div>
             </div>
           </template>
-        </transition-group>
+        </TransitionGroup>
       </div>
     </div>
   </div>
@@ -344,6 +344,11 @@ const reStart = (): void => {
 
 
 .v-move {
+  // @for $i from 0 through 24 {
+  //   &:nth-child(#{$i}) {
+  //     transition-delay: ($i * 0.02s);
+  //   }
+  // }
   transition: transform 0.4s;
 }
 </style>
