@@ -41,7 +41,7 @@ watchEffect(() => {
   }
 })
 
-const shuffleCheck = () => {
+const shuffleCheck = (): void => {
   let before = numberList.value
   let after = [...numberList.value].sort(() => Math.random() - 0.5)
 
@@ -122,7 +122,7 @@ const columnValidation = (idx: number): void => {
   }
 
   if (isBingo && bingoColumn.indexOf(idx) === -1) {
-    bingoCount.value ++
+    bingoCount.value++
     bingoColumn.push(idx)
     isBingoValueChange(COL, idx)
   }
@@ -142,7 +142,7 @@ const rowValidation = (idx: number): void => {
   }
 
   if (isBingo && bingoRow.indexOf(idx) === -1) {
-    bingoCount.value ++
+    bingoCount.value++
     bingoRow.push(idx)
     isBingoValueChange(ROW, idx)
   }
@@ -172,7 +172,7 @@ const diagonalValidation = (flag: string): void => {
   }
 
   if (isBingo && bingoDiagonal.indexOf(flag) === -1) {
-    bingoCount.value ++
+    bingoCount.value++
     bingoDiagonal.push(flag)
     isBingoValueChange(flag)
   }
@@ -223,7 +223,8 @@ const selectedValueChange = (): void => {
 }
 
 /**
- * 애니메이션 넘버
+ *
+ * params
  */
 const animateNumber = (n: number): void => {
   let time = TOTAL_COUNT * 30
@@ -344,11 +345,6 @@ const reStart = (): void => {
 
 
 .v-move {
-  // @for $i from 0 through 24 {
-  //   &:nth-child(#{$i}) {
-  //     transition-delay: ($i * 0.02s);
-  //   }
-  // }
   transition: transform 0.4s;
 }
 </style>

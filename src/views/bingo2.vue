@@ -9,8 +9,6 @@ interface BingoList {
 const COLS: number = 4
 const TOTAL_COUNT: number = COLS ** 2
 
-const COL: string = 'col'
-const ROW: string = 'row'
 const LEFT: string = 'L'
 const RIGHT: string = 'R'
 
@@ -19,18 +17,13 @@ const cardSize = ref({
   height: `calc((100% - (${(COLS - 1) * 5}px))  / ${COLS})`,
 })
 
-let isPlay = ref<boolean>(false)
 let isGameEnd = ref<boolean>(false)
 
 let numberList = ref<BingoList[][]>([])
 let drawNumber = ref<number>(0)
 let drawList: number[] = []
-let drawIndexList: number[] = []
 
 let bingoCount = ref<number>(0)
-let bingoColumn: number[] = []
-let bingoRow: number[] = []
-let bingoDiagonal: string[] = []
 
 watchEffect(() => {
   if (bingoCount.value >= 4) {
@@ -40,14 +33,14 @@ watchEffect(() => {
   }
 })
 
-const setNumberList = (arr: BingoList[]) => {
+const setNumberList = (arr: BingoList[]): void => {
   numberList.value = []
   for (let i = 0; i < 5; i++) {
     numberList.value.push(arr.splice(0,COLS))
   }
 }
 
-const shuffle = (array: BingoList[]) => {
+const shuffle = (array: BingoList[]): void => {
   const before = array
   let after = [...before].sort(() => Math.random() - 0.5)
 
@@ -67,7 +60,8 @@ const shuffle = (array: BingoList[]) => {
   setNumberList(after)
 }
 
-const createNumber = () => {
+
+const createNumber = (): void => {
   const creatArray =
     new Array(TOTAL_COUNT)
       .fill({})
@@ -85,111 +79,75 @@ const createNumber = () => {
 }
 createNumber()
 
+let rowBingo: number[] = []
+let colBingo: number[] = []
+let diagonalBingo: string[] = []
+let rowSelectedArr: boolean[][] = []
+let colSelectedArr: boolean[][] = []
 
-/**
- * 세로 빙고가 맞는지 검증하는 함수
- */
-const columnValidation = (idx: number): void => {
-  let isBingo: boolean = true
-
+const createSelectedArr = (): void => {
   for (let i = 0; i < COLS; i++) {
-    if (drawIndexList.indexOf(idx+(i * COLS)) === -1) {
-      isBingo = !isBingo
-      break
-    }
-  }
-
-  if (isBingo && bingoColumn.indexOf(idx) === -1) {
-    bingoCount.value ++
-    bingoColumn.push(idx)
-    // isBingoValueChange(COL, idx)
+    let arr = new Array(COLS).fill(false)
+    rowSelectedArr.push([...arr])
+    colSelectedArr.push([...arr])
   }
 }
+createSelectedArr()
 
-/**
- * 가로 빙고가 맞는지 검증하는 함수
- */
-const rowValidation = (idx: number): void => {
-  let isBingo: boolean = true
-
-  for (let i = 0; i < COLS; i++)  {
-    if (drawIndexList.indexOf(idx + i) === -1) {
-      isBingo = !isBingo
-      break
-    }
-  }
-
-  if (isBingo && bingoRow.indexOf(idx) === -1) {
-    bingoCount.value ++
-    bingoRow.push(idx)
-    // isBingoValueChange(ROW, idx)
-  }
-}
-
-/**
- * 대각선 빙고가 맞는지 검증하는 함수
- */
-const diagonalValidation = (flag: string): void => {
-  let isBingo: boolean = true
-  if (flag === LEFT) {
-    for (let i = 0; i < COLS; i++) {
-      if (drawIndexList.indexOf(i * (COLS + 1)) === -1) {
-        isBingo = !isBingo
-        break
-      }
-    }
-
-  } else {
-    for (let i = 0; i < COLS; i++)  {
-      if (drawIndexList.indexOf((i + 1) * (COLS - 1)) === -1) {
-        isBingo = !isBingo
-        break
-      }
-    }
-  }
-
-  if (isBingo && bingoDiagonal.indexOf(flag) === -1) {
-    bingoCount.value ++
-    bingoDiagonal.push(flag)
-    // isBingoValueChange(flag)
-  }
-}
 
 const bingoCheck = () => {
-  drawIndexList.sort((a, b) => a - b)
-
-  if (drawIndexList.length >= COLS) {
-    for(let i = 0; i < drawIndexList.length; i++) {
-      if (i < COLS && drawIndexList.indexOf(i) !== -1) {
-        columnValidation(i)
-      }
-
-      if (drawIndexList.indexOf(i * COLS) !== -1) {
-        rowValidation(i * COLS)
-      }
+  for(let i = 0; i < COLS; i++) {
+    if (rowSelectedArr[i].indexOf(false) === -1 && rowBingo.indexOf(i) === -1) {
+      bingoCount.value++
+      rowBingo.push(i)
     }
+  }
 
-    if (drawIndexList.indexOf(COLS + 1) !== -1 && drawIndexList.indexOf(0) !== -1) {
-      diagonalValidation(LEFT)
+  for(let i = 0; i < COLS; i++) {
+    if (colSelectedArr[i].indexOf(false) === -1 && colBingo.indexOf(i) === -1) {
+      bingoCount.value++
+      colBingo.push(i)
     }
+  }
 
-    if (drawIndexList.indexOf(Math.floor((COLS * 2) - 2)) !== -1 && drawIndexList.indexOf((COLS - 1)) !== -1) {
-      diagonalValidation(RIGHT)
+  let right = true
+  for(let i = 0; i < COLS; i++) {
+    right = rowSelectedArr[i][COLS - 1 - i]
+    if (!right) {
+      break
+
+    } else if (i === COLS - 1 && right && diagonalBingo.indexOf(RIGHT) === -1) {
+      diagonalBingo.push(RIGHT)
+      bingoCount.value++
+    }
+  }
+
+  let left = true
+  for(let i = 0; i < COLS; i++) {
+    left = rowSelectedArr[i][i]
+    if (!left) {
+      break
+
+    } else if (i === COLS - 1 && left && diagonalBingo.indexOf(LEFT) === -1) {
+      diagonalBingo.push(LEFT)
+      bingoCount.value++
     }
   }
 }
 
-const selectedValueChange = (y: number, x: number) => {
+const selectedValueChange = (y: number, x: number): void => {
   numberList.value[y][x].selected = true
+  rowSelectedArr[y][x] = true
+  colSelectedArr[x][y] = true
 }
 
-const bingoIndexCheck = () => {
+const bingoIndexCheck = (): void => {
   outerFor : for (let i = 0; i < COLS; i++) {
     for (let j = 0; j < COLS; j++) {
       if (numberList.value[i][j].value === drawNumber.value) {
         selectedValueChange(i, j)
-        drawIndexList.push((i * COLS) + j)
         bingoCheck()
+
         break outerFor
       }
 
@@ -197,7 +155,7 @@ const bingoIndexCheck = () => {
   }
 }
 
-const getDrawNumber = () => {
+const getDrawNumber = (): void => {
   let number: number = 0
 
   number = Math.floor(Math.random() * TOTAL_COUNT + 1)
@@ -214,17 +172,21 @@ const init = (): void => {
   numberList.value = []
   drawNumber.value = 0
   drawList = []
-  drawIndexList = []
 
   bingoCount.value = 0
-  bingoColumn = []
-  bingoRow = []
-  bingoDiagonal = []
+
+  rowBingo = []
+  colBingo = []
+  diagonalBingo = []
+  rowSelectedArr = []
+  colSelectedArr = []
 }
+
 const reStart = (): void => {
   isGameEnd.value = false
 
   init()
+  createSelectedArr()
   createNumber()
 }
 
