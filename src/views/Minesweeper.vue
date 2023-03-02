@@ -34,7 +34,7 @@ let cellStyle = ref(`
 
 watchEffect(() => {
   if (mines.value === 0) {
-    console.log('지뢰 검증~')
+    gameAnd()
   }
 })
 
@@ -44,6 +44,15 @@ let firstAround: number[] = []
 
 let mineList: number[] = []
 let pinList: number[] =  []
+
+const getIndex = (y: number, x: number): number => {
+  return y * cellY + x
+}
+const getCoord = (index: number): number[] => {
+  const x = index % cellX
+  const y = Math.floor(index / cellX)
+  return [y, x]
+}
 
 
 let board = ref<Ground[][]>([])
@@ -63,7 +72,7 @@ const init = (): void => {
     new Array(cellY)
     .fill([])
     .map(itemY => {
-      let arr = new Array(cellX).fill(0).map(itemX => {
+      return new Array(cellX).fill(0).map(itemX => {
         return {
             isMine: false,
             mineCount: 0,
@@ -72,7 +81,6 @@ const init = (): void => {
             isSafe: false
           }
       })
-      return arr
     })
 
   mines.value = select[level.value].mine
@@ -110,8 +118,7 @@ const bottomRightCheck = (y: number, x: number): boolean => {
 
 const setMinCount = (): void => {
   mineList.sort((a, b) => a - b).forEach(index => {
-    const x: number = index % cellX
-    const y: number = Math.floor(index / cellX)
+    const [y, x] = getCoord(index)
 
     if (topLeftCheck(y, x)) {
       board.value[y - 1][x - 1].mineCount ++
@@ -144,15 +151,12 @@ const setMinCount = (): void => {
     if (bottomRightCheck(y, x)) {
       board.value[y + 1][x + 1].mineCount ++
     }
-
   })
-
 }
 
 const setMine = (): void => {
-  mineList.sort((a, b) => a - b).map(item => {
-    let x = item % cellX
-    let y = Math.floor(item / cellX)
+  mineList.sort((a, b) => a - b).forEach(item => {
+    const [y, x] = getCoord(item)
     board.value[y][x].isMine = true
   })
 
@@ -173,6 +177,21 @@ const setRondomMine = (): void => {
   }
 
   setRondomMine()
+}
+
+const gameAnd = (): void => {
+  console.log('지뢰 검증~')
+  mineList.sort((a, b) => a - b)
+  pinList.sort((a, b) => a - b)
+
+  mineList.forEach((item, index) => {
+    if (item === pinList[index]) {
+      console.log('게임 클리어')
+    } else {
+      console.log('게임 클리어 실패')
+    }
+  })
+
 }
 
 const isNearMine = (y: number, x: number): void => {
@@ -244,17 +263,15 @@ const isNearMine = (y: number, x: number): void => {
   }
 
   safeList.forEach(cell => isNearMine(cell[0], cell[1]))
-
 }
 
 const isOpen = (y: number, x: number): void => {
   if (board.value[y][x].isMine) {
     console.log('게임 종료')
   } else {
-    console.log('click ---- > ', y, x)
+    // console.log('click ---- > ', y, x)
     isNearMine(y, x)
   }
-
 }
 
 const gameStart = (): void => {
@@ -262,12 +279,12 @@ const gameStart = (): void => {
 }
 
 const removePin = (y: number, x: number): void => {
-  let idx = pinList.indexOf(y * cellY + x)
+  let idx = pinList.indexOf(getIndex(y, x))
   pinList.splice(idx,1)
 }
 
 const setPin = (y: number, x: number): void => {
-  let pinIdx = y * cellY + x
+  let pinIdx = getIndex(y, x)
 
   if (board.value[y][x].isPin) {
     board.value[y][x].isPin = false
@@ -280,10 +297,52 @@ const setPin = (y: number, x: number): void => {
   }
 }
 
+const showHint = (y: number, x: number): void => {
+  let nearMines: number = board.value[y][x].mineCount
+  let nearPin: number = 0
+  let nearPinList: number[] = []
 
-let mouseLeft: boolean = false
-let mouseRight: boolean = false
+  if (topLeftCheck(y, x)) {
+    if (board.value[y - 1][x - 1].isPin) {
+      nearPinList.push()
+    }
+  }
 
+  if (topCheck(y, x)) {
+    nearPin += board.value[y - 1][x].isPin ? 1 : 0
+  }
+
+  if (topRightCheck(y, x)) {
+    nearPin += board.value[y - 1][x + 1].isPin ? 1 : 0
+  }
+
+  if (leftCheck(y, x)) {
+    nearPin += board.value[y][x - 1].isPin ? 1 : 0
+  }
+
+  if (rightCheck(y, x)) {
+    nearPin += board.value[y][x + 1].isPin ? 1 : 0
+  }
+
+  if (bottomLeftCheck(y, x)) {
+    nearPin += board.value[y + 1][x - 1].isPin ? 1 : 0
+  }
+
+  if (bottomCheck(y, x)) {
+    nearPin += board.value[y + 1][x].isPin ? 1 : 0
+  }
+
+  if (bottomRightCheck(y, x)) {
+    nearPin += board.value[y + 1][x + 1].isPin ? 1 : 0
+  }
+
+  if (nearMines === nearPin) {
+    console.log('힌트: 근처 오픈~')
+  }
+}
+
+let mouseLeft = false
+let mouseRight = false
 const cellMouseDown = (event: any): void => {
   event.preventDefault()
 
@@ -302,7 +361,9 @@ const cellMouseUp = (event: any, coord: number[]): void => {
   let [y, x] = coord
 
   if (mouseLeft && mouseRight) {
-    console.log('힌트')
+    if (board.value[y][x].mineCount !== 0) {
+      showHint(y, x)
+    }
 
     mouseLeft = false
     mouseRight = false
@@ -310,7 +371,7 @@ const cellMouseUp = (event: any, coord: number[]): void => {
 
   } else if (mouseLeft) {
     if (mineList.length === 0) {
-      firstIndex = (coord[0]) * cellY + coord[1]
+      firstIndex = getIndex(coord[0], coord[1])
       firstCoord = coord
       firstAround = new Array(9).fill(0).map((item, index) => {
         let x = (index % 3) - 1
