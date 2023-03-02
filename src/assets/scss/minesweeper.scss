@@ -1,34 +1,46 @@
-.gameBox {
-  display: flex;
-  justify-content: space-between;
+#contents .gameBox {
+  width: 850px;
 }
 
 .ground {
   position: relative;
-  margin: 0 auto;
+  text-align: center;
   .gridBox {
-    display: grid;
-    width: 600px;
-    height: 600px;
+    display: inline-grid;
     .grid {
       position: relative;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #f3ffe9;
+      background: #d4f2d4;
+      border: 1px solid #999;
+      margin-top: -1px;
+      margin-left: -1px;
       font-size: 12px;
       color: #999;
-      &:nth-child(2n-1) {
-        background: #e0f1d1;
+      box-shadow: 1px 1px 5px 2px rgb(0 0 0 / 30%);
+      z-index: 2;
+      &.level-0 {
+        width: 45px;
+        height: 45px;
+      }
+      &.level-1 {
+        width: 35px;
+        height: 35px;
+      }
+      &.level-2 {
+        width: 27px;
+        height: 27px;
       }
       i {
         position: absolute;
         bottom: 2px;
         right:2px;
         color: #444;
+        font-size: 10px;
       }
       .count {
-        font-size: 30px;
+        font-size: 25px;
         font-weight: bold;
         &.count-1 { color: #0f46a7}
         &.count-2 { color: #03c243}
@@ -41,12 +53,31 @@
         color: #e23333;
       }
       &.open {
-        background: #efe1c8;
-      }
-      &:nth-child(2n-1).open {
-        background: #e6cfa6;
+        background: #efdbb7;
+        box-shadow: none;
+        z-index: 1;
       }
     }
 
+  }
+}
+
+.scoreZone {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #ddd;
+
+  h2 {
+    margin-top: 0px;
+    margin-bottom: 5px;
+    font-size: 20px;
+  }
+  select {
+    display: block;
+    width:100%;
+    height: 30px;
   }
 }
