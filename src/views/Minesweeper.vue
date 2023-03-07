@@ -6,6 +6,8 @@ interface Ground {
   isPin: boolean
   isOpen: boolean
   isSafe: boolean
+  nearMine : string[]
+  ishint: boolean
 }
 
 interface Select {
@@ -16,6 +18,8 @@ interface Select {
   mine: number
 }
 
+let isPlay = ref<boolean>(false)
+let isGameEnd = ref<boolean>(false)
 let level = ref<number>(0)
 let cellX: number = 0
 let cellY: number = 0
@@ -32,8 +36,17 @@ let cellStyle = ref(`
   grid-template-rows: repeat(${select[level.value].cellY}, 1fr);
 `)
 
+const getCoord = (index: number): number[] => {
+  return [Math.floor(index / cellX) , index % cellX]
+}
+
+const getIndex = (y: number, x: number): number => {
+  return y * cellY + x
+}
+
 watchEffect(() => {
   if (mines.value === 0) {
+    console.log('지뢰 검증~')
     gameAnd()
   }
 })
@@ -41,21 +54,67 @@ watchEffect(() => {
 let firstIndex: number = 0
 let firstCoord: number[] = []
 let firstAround: number[] = []
+let time = ref<string>('000')
 
 let mineList: number[] = []
 let pinList: number[] =  []
-
-const getIndex = (y: number, x: number): number => {
-  return y * cellY + x
-}
-const getCoord = (index: number): number[] => {
-  const x = index % cellX
-  const y = Math.floor(index / cellX)
-  return [y, x]
-}
-
-
 let board = ref<Ground[][]>([])
+
+const showReStar = () => {
+  setTimeout(() => {
+    isGameEnd.value = true
+  }, 2000)
+}
+
+const minesOpen = () => {
+  mineList.forEach(index => {
+    let [y, x] = getCoord(index)
+    board.value[y][x].isOpen = true
+  })
+  showReStar()
+}
+
+const isClear = () => {
+  let aa = []
+  mineList.forEach(index => {
+    let [y, x] = getCoord(index)
+    aa.push(board.value[y][x].isPin ? true : false)
+  })
+
+  console.log(aa)
+
+  if (aa.indexOf(false) === -1) {
+    console.log('clear!')
+    showReStar()
+
+  } else {
+    minesOpen()
+  }
+}
+
+
+let interval = null
+const timeStart = () => {
+  isPlay.value = true
+
+  let timeNum: number = 0
+  interval = setInterval(() => {
+    timeNum++
+    time.value = timeNum.toString().padStart(3,0)
+  }, 1000)
+}
+
+const gameAnd = (): void => {
+  clearInterval(interval)
+  isPlay.value = false
+
+  if (mines.value !== 0 ) {
+    minesOpen()
+  } else {
+    isClear()
+  }
+}
+
 const init = (): void => {
   firstIndex = 0
   firstCoord = []
@@ -67,22 +126,23 @@ const init = (): void => {
   cellX = select[level.value].cellX
   totalCell = cellY * cellX
 
-
   board.value =
     new Array(cellY)
     .fill([])
     .map(itemY => {
-      return new Array(cellX).fill(0).map(itemX => {
+      let arr = new Array(cellX).fill(0).map(itemX => {
         return {
             isMine: false,
             mineCount: 0,
             isPin: false,
             isOpen: false,
-            isSafe: false
+            isSafe: false,
+            nearMine: [],
+            ishint: false
           }
       })
+      return arr
     })
-
   mines.value = select[level.value].mine
   cellStyle.value =
     `grid-template-columns: repeat(${cellX}, 1fr);
@@ -118,45 +178,56 @@ const bottomRightCheck = (y: number, x: number): boolean => {
 
 const setMinCount = (): void => {
   mineList.sort((a, b) => a - b).forEach(index => {
-    const [y, x] = getCoord(index)
+    let [y, x] = getCoord(index)
 
     if (topLeftCheck(y, x)) {
       board.value[y - 1][x - 1].mineCount ++
+      board.value[y - 1][x - 1].nearMine.push('bottomRight')
     }
 
     if (topCheck(y, x)) {
       board.value[y - 1][x].mineCount ++
+      board.value[y - 1][x].nearMine.push('bottom')
     }
 
     if (topRightCheck(y, x)) {
       board.value[y - 1][x + 1].mineCount ++
+      board.value[y - 1][x + 1].nearMine.push('bottomLeft')
     }
 
     if (leftCheck(y, x)) {
       board.value[y][x - 1].mineCount ++
+      board.value[y][x - 1].nearMine.push('right')
     }
 
     if (rightCheck(y, x)) {
       board.value[y][x + 1].mineCount ++
+      board.value[y][x + 1].nearMine.push('left')
     }
 
     if (bottomLeftCheck(y, x)) {
       board.value[y + 1][x - 1].mineCount ++
+      board.value[y + 1][x - 1].nearMine.push('topRight')
     }
 
     if (bottomCheck(y, x)) {
       board.value[y + 1][x].mineCount ++
+      board.value[y + 1][x].nearMine.push('top')
     }
 
     if (bottomRightCheck(y, x)) {
       board.value[y + 1][x + 1].mineCount ++
+      board.value[y + 1][x + 1].nearMine.push('topLeft')
     }
+
   })
+
 }
 
 const setMine = (): void => {
-  mineList.sort((a, b) => a - b).forEach(item => {
-    const [y, x] = getCoord(item)
+  mineList.sort((a, b) => a - b).map(item => {
+    let x = item % cellX
+    let y = Math.floor(item / cellX)
     board.value[y][x].isMine = true
   })
 
@@ -171,7 +242,6 @@ const setRondomMine = (): void => {
   }
 
   let newMine = Math.floor(Math.random() * totalCell)
-
   if (mineList.indexOf(newMine) === -1 && firstAround.indexOf(newMine) === -1) {
     mineList.push(newMine)
   }
@@ -179,19 +249,17 @@ const setRondomMine = (): void => {
   setRondomMine()
 }
 
-const gameAnd = (): void => {
-  console.log('지뢰 검증~')
-  mineList.sort((a, b) => a - b)
-  pinList.sort((a, b) => a - b)
-
-  mineList.forEach((item, index) => {
-    if (item === pinList[index]) {
-      console.log('게임 클리어')
-    } else {
-      console.log('게임 클리어 실패')
-    }
-  })
-
+const nearCheck = (y: number, x: number): number[] => {
+  let nearList = []
+  nearList.push(topLeftCheck(y, x) ? getIndex(y - 1, x - 1) : -1)
+  nearList.push(topCheck(y, x) ? getIndex(y - 1, x) : -1)
+  nearList.push(topRightCheck(y, x) ? getIndex(y - 1, x + 1) : -1)
+  nearList.push(leftCheck(y, x) ? getIndex(y, x - 1) : -1)
+  nearList.push(rightCheck(y, x) ? getIndex(y, x + 1 ) : -1)
+  nearList.push(bottomLeftCheck(y, x) ? getIndex(y + 1, x - 1) : -1)
+  nearList.push(bottomCheck(y, x) ? getIndex(y + 1, x) : -1)
+  nearList.push(bottomRightCheck(y, x) ? getIndex(y + 1, x + 1) : -1)
+  return nearList
 }
 
 const isNearMine = (y: number, x: number): void => {
@@ -210,55 +278,16 @@ const isNearMine = (y: number, x: number): void => {
     removePin(y, x)
   }
 
-  if (topLeftCheck(y, x)) {
-    safeList.push(
-      !board.value[y - 1][x - 1].isMine ? [y - 1, x -1] : [-1, -1]
-    )
-  }
+  nearCheck(y, x).forEach(index => {
+    if (index > 0) {
+      const [y, x] = getCoord(index)
+      safeList.push(
+        !board.value[y][x].isMine ? [y, x] : [-1, -1]
+      )
+    }
+  })
 
-  if (topCheck(y, x)) {
-    safeList.push(
-      !board.value[y - 1][x].isMine ? [y - 1, x] : [-1, -1]
-    )
-  }
-
-  if (topRightCheck(y, x)) {
-    safeList.push(
-      !board.value[y - 1][x + 1].isMine ? [y - 1, x] : [-1, -1]
-    )
-  }
-
-  if (leftCheck(y, x)) {
-    safeList.push(
-      !board.value[y][x - 1].isMine ? [y, x - 1] : [-1, -1]
-    )
-  }
-
-  if (rightCheck(y, x)) {
-    safeList.push(
-      !board.value[y][x + 1].isMine ? [y, x + 1] : [-1, -1]
-    )
-  }
-
-  if (bottomLeftCheck(y, x)) {
-    safeList.push(
-      !board.value[y + 1][x - 1].isMine ? [y + 1, x - 1] : [-1, -1]
-    )
-  }
-
-  if (bottomCheck(y, x)) {
-    safeList.push(
-      !board.value[y + 1][x].isMine ? [y + 1, x] : [-1, -1]
-    )
-  }
-
-  if (bottomRightCheck(y, x)) {
-    safeList.push(
-      !board.value[y + 1][x + 1].isMine ? [y + 1, x + 1] : [-1, -1]
-    )
-  }
-
-  if ([...safeList].join('').includes('-1')) {
+  if([...safeList].join('').includes('-1')) {
     return
   }
 
@@ -266,132 +295,134 @@ const isNearMine = (y: number, x: number): void => {
 }
 
 const isOpen = (y: number, x: number): void => {
-  if (board.value[y][x].isMine) {
+  if (mineList.length === 0) {
+    firstIndex = getIndex(y, x)
+    firstCoord = [y, x]
+    firstAround = new Array(9).fill(0).map((item, index) => {
+      let nearX = (index % 3) - 1
+      let nearY = (Math.floor(index / 3)) - 1
+      return firstIndex + (cellX * nearY) + nearX
+    })
+
+    setRondomMine()
+    time.value = '000'
+    timeStart()
+
+  } else if (board.value[y][x].isMine) {
     console.log('게임 종료')
+    gameAnd()
+
   } else {
-    // console.log('click ---- > ', y, x)
+    console.log('click ---- > ', y, x)
     isNearMine(y, x)
   }
 }
 
+
 const gameStart = (): void => {
+  isGameEnd.value = false
   init()
 }
 
 const removePin = (y: number, x: number): void => {
-  let idx = pinList.indexOf(getIndex(y, x))
+  let idx = pinList.indexOf(y * cellY + x)
   pinList.splice(idx,1)
 }
 
 const setPin = (y: number, x: number): void => {
-  let pinIdx = getIndex(y, x)
+  let pinIdx = y * cellY + x
+
+  if (board.value[y][x].isOpen) {
+    return
+  }
 
   if (board.value[y][x].isPin) {
     board.value[y][x].isPin = false
     removePin(y, x)
-  } else {
 
+  } else {
     pinList.push(pinIdx)
     board.value[y][x].isPin = true
     mines.value--
   }
 }
 
-const showHint = (y: number, x: number): void => {
-  let nearMines: number = board.value[y][x].mineCount
-  let nearPin: number = 0
-  let nearPinList: number[] = []
+const hintList = []
+const getHint = (y: number, x: number): void => {
+  if (!board.value[y][x].isOpen) {
+    isOpen(y, x)
+    return
+  }
 
-  if (topLeftCheck(y, x)) {
-    if (board.value[y - 1][x - 1].isPin) {
-      nearPinList.push()
+  let mineCount = board.value[y][x].mineCount
+  let nearMine = board.value[y][x].nearMine
+  let nearUnopenCells = []
+  console.log('hint', mineCount, nearMine)
+  let pinCount = 0
+
+  if (mineCount === 0) {
+    return
+  }
+
+  console.log('힌트')
+  nearCheck(y,x).forEach(index => {
+    if (index > 0 ) {
+      const [y,x] = getCoord(index)
+      pinCount += board.value[y][x].isPin ? 1 : 0
+      // nearUnopenCells.push()
+      board.value[y][x].ishint = true
+      hintList.push(index)
     }
-  }
 
-  if (topCheck(y, x)) {
-    nearPin += board.value[y - 1][x].isPin ? 1 : 0
-  }
+  })
 
-  if (topRightCheck(y, x)) {
-    nearPin += board.value[y - 1][x + 1].isPin ? 1 : 0
-  }
+  // if (nearMine.indexOf('top') !== -1) {
+  //   if (board.value[y - 1][x].isPin) {
+  //     console.log('oo')
+  //     pinCount ++
+  //   } else {
+  //     console.log('xx')
+  //   }
+  // }
 
-  if (leftCheck(y, x)) {
-    nearPin += board.value[y][x - 1].isPin ? 1 : 0
-  }
-
-  if (rightCheck(y, x)) {
-    nearPin += board.value[y][x + 1].isPin ? 1 : 0
-  }
-
-  if (bottomLeftCheck(y, x)) {
-    nearPin += board.value[y + 1][x - 1].isPin ? 1 : 0
-  }
-
-  if (bottomCheck(y, x)) {
-    nearPin += board.value[y + 1][x].isPin ? 1 : 0
-  }
-
-  if (bottomRightCheck(y, x)) {
-    nearPin += board.value[y + 1][x + 1].isPin ? 1 : 0
-  }
-
-  if (nearMines === nearPin) {
-    console.log('힌트: 근처 오픈~')
-  }
 }
+
 
 let mouseLeft = false
 let mouseRight = false
-const cellMouseDown = (event: any): void => {
-  event.preventDefault()
+let hint = false
 
-  if (event.which === 1 || event.button === 0) {
-    mouseLeft = true
-  }
-
-  if (event.which === 3 || event.button === 2) {
-    mouseRight = true
-  }
-}
-
-const cellMouseUp = (event: any, coord: number[]): void => {
-  event.preventDefault()
-
+const cellMouseDown = (event: any, coord: number[]): void => {
   let [y, x] = coord
 
-  if (mouseLeft && mouseRight) {
-    if (board.value[y][x].mineCount !== 0) {
-      showHint(y, x)
-    }
+  if (event.button === 0 && event.buttons === 3 || event.button === 2 && event.buttons === 3) {
+    hint = true
 
-    mouseLeft = false
-    mouseRight = false
-    return
-
-  } else if (mouseLeft) {
-    if (mineList.length === 0) {
-      firstIndex = getIndex(coord[0], coord[1])
-      firstCoord = coord
-      firstAround = new Array(9).fill(0).map((item, index) => {
-        let x = (index % 3) - 1
-        let y = (Math.floor(index / 3)) - 1
-        return firstIndex + (cellX * y) + x
-      })
-      setRondomMine()
+    if (board.value[y][x].isOpen) {
+      getHint(y,x)
 
     } else {
       isOpen(y, x)
     }
 
   } else {
-    if (!board.value[y][x].isOpen) {
-      setPin(y, x)
-    }
+    hint = false
   }
+}
 
-  mouseLeft = false
-  mouseRight = false
+const cellMouseUp = (event: any, coord: number[]): void => {
+  let [y, x] = coord
+  if (hint) {
+    console.log('up 힌트 클리어')
+
+  } else if (event.button === 0 && event.buttons === 0) {
+    console.log('up 오픈')
+    isOpen(y, x)
+
+  } else if (event.button === 2 && event.buttons === 0) {
+    console.log('up 핀')
+    setPin(y, x)
+  }
 }
 
 
@@ -407,7 +438,6 @@ const cellMouseUp = (event: any, coord: number[]): void => {
         <select v-model="level" @change="gameStart()">
           <option
             :value="option.value"
-            :key="option.text"
             v-for="option in select">
               {{ option.text }}
           </option>
@@ -415,29 +445,45 @@ const cellMouseUp = (event: any, coord: number[]): void => {
       </div>
       <h2>💣 {{ mines }}</h2>
       <h2 class="time">
-      ⏱ 000
+      ⏱ {{ time }}
       </h2>
     </div>
 
     <div class="ground">
+      <div class="reStart" v-if="isGameEnd">
+        <div class="btn" @click="gameStart()">
+          <font-awesome-icon icon="fa-solid fa-rotate-right" />
+          재시작
+        </div>
+      </div>
+
       <div class="gridBox" :style="cellStyle" >
         <template v-for="(cellY, indexY) in board">
           <template v-for="(cell, indexX) in cellY" :key="`box-${indexX}`">
 
             <div
               :class="['grid', `level-${level}`, {'open': cell.isOpen}]"
-              @mousedown.prevent="cellMouseDown($event)"
+              @mousedown.prevent="cellMouseDown($event, [indexY, indexX])"
               @mouseup.prevent="cellMouseUp($event, [indexY, indexX])"
+              @contextmenu.prevent
               >
-                <!-- <i>{{cell.index}} [{{ indexY }}, {{ indexX }}]</i> -->
-
+              <!-- @mouseup.prevent="cellMouseUp($event, [indexY, indexX])" -->
+                <div
+                  class="hint"
+                  v-if="cell.ishint && !cell.isOpen">
+                </div>
+                <i>{{ indexY * 9 + indexX }} [{{indexY}}, {{ indexX }}]</i>
                 <span
                   :class="['count', `count-${cell.mineCount}`]"
                   v-if="cell.mineCount > 0 && !cell.isMine && cell.isOpen">
                   {{ cell.mineCount }}
                 </span>
 
-                <!-- <span v-if="cell.isMine && !cell.isPin">💣</span> -->
+                <span
+                  :class="['mine', {'mineOpen': cell.isOpen}]"
+                  v-if="cell.isMine && !cell.isPin">
+                  💣
+                </span>
                 <span class="pin" v-if="cell.isPin">🚩</span>
             </div>
 
