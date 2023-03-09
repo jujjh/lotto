@@ -61,13 +61,13 @@ let mineList: number[] = []
 let pinList: number[] =  []
 let board = ref<Ground[][]>([])
 
-const showReStar = () => {
+const showReStar = (): void => {
   setTimeout(() => {
     isGameEnd.value = true
   }, 2000)
 }
 
-const minesOpen = () => {
+const minesOpen = (): void => {
   mineList.forEach(index => {
     let [y, x] = getCoord(index)
     board.value[y][x].isOpen = true
@@ -75,13 +75,14 @@ const minesOpen = () => {
   showReStar()
 }
 
-const isClear = () => {
+const isClear = (): void => {
+  let mineFind: boolean[] = []
   mineList.forEach(index => {
     let [y, x] = getCoord(index)
-    pinList.push(board.value[y][x].isPin ? true : false)
+    mineFind.push(board.value[y][x].isPin ? true : false)
   })
 
-  if (pinList.indexOf(false) === -1) {
+  if (mineFind.indexOf(false) === -1) {
     resultText.value = '🎉Clear!🎉'
     showReStar()
 
@@ -91,8 +92,8 @@ const isClear = () => {
 }
 
 
-let interval: any = null
-const timeStart = () => {
+let interval: number | undefined
+const timeStart = (): void => {
   isPlay.value = true
 
   let timeNum: number = 0
@@ -148,7 +149,11 @@ const init = (): void => {
 }
 init()
 
-
+/**
+ * 셀 존재 여부를 체크하는 함수들
+ * @param y
+ * @param x
+ */
 const topLeftCheck = (y: number, x: number): boolean => {
   return y - 1 >= 0 && x - 1 >= 0 ? true : false
 }
@@ -223,14 +228,13 @@ const setMinCount = (): void => {
 }
 
 const setMine = (): void => {
-  mineList.sort((a, b) => a - b).map(item => {
-    let x = item % cellX
-    let y = Math.floor(item / cellX)
+  mineList.sort((a, b) => a - b).map(index => {
+    const [y, x] = getCoord(index)
     board.value[y][x].isMine = true
   })
 
   setMinCount()
-  isOpen(firstCoord[0], firstCoord[1])
+  cellCheck(firstCoord[0], firstCoord[1])
 }
 
 const setRondomMine = (): void => {
@@ -261,6 +265,7 @@ const nearCheck = (y: number, x: number): number[] => {
 }
 
 const isNearMine = (y: number, x: number): void => {
+
   if (board.value[y][x].isSafe) {
     return
   }
@@ -273,24 +278,45 @@ const isNearMine = (y: number, x: number): void => {
   if (board.value[y][x].isPin) {
     board.value[y][x].isPin = false
     mines.value++
-    removePin(y, x)
+    pinList = []
   }
 
   nearCheck(y, x).forEach(index => {
-    if (index > 0) {
+    if (index > -1) {
       const [y, x] = getCoord(index)
       safeList.push(!board.value[y][x].isMine ? [y, x] : [-1, -1])
     }
   })
 
-  if([...safeList].join('').includes('-1')) {
+  if ([...safeList].join('').includes('-1')) {
     return
   }
 
   safeList.forEach(cell => isNearMine(cell[0], cell[1]))
 }
 
-const isOpen = (y: number, x: number): void => {
+
+/**
+ * Cell에 핀 또는 지뢰가 없을때 cellOpen 실행.
+ * 지뢰가 있을때 게임 종료
+ * @param {y} cell 좌표 y값
+ * @param {x} cell 좌표 x값
+ */
+const cellCheck = (y: number, x: number): void => {
+  if (!board.value[y][x].isPin && !board.value[y][x].isMine) {
+    cellOpen(y, x)
+  } else if (board.value[y][x].isMine) {
+    resultText.value = '💣펑! 💀💀💀 '
+    gameAnd()
+  }
+}
+
+/**
+ * 배치된 지뢰가 없을때 지뢰 배치 후 cell 오픈
+ * @param {y} cell 좌표 y값
+ * @param {x} cell 좌표 x값
+ */
+const cellOpen = (y: number, x: number): void => {
   if (mineList.length === 0) {
     firstIndex = getIndex(y, x)
     firstCoord = [y, x]
@@ -303,11 +329,6 @@ const isOpen = (y: number, x: number): void => {
     setRondomMine()
     time.value = '000'
     timeStart()
-  } else if (board.value[y][x].isPin) {
-    return
-  } else if (board.value[y][x].isMine) {
-    resultText.value = '💣펑! 💀💀💀 '
-    gameAnd()
 
   } else {
     console.log('click ---- > ', y, x)
@@ -322,8 +343,6 @@ const gameStart = (): void => {
 }
 
 const setPin = (y: number, x: number): void => {
-  let pinIdx: number = y * cellY + x
-
   if (board.value[y][x].isOpen) {
     return
   }
@@ -338,10 +357,15 @@ const setPin = (y: number, x: number): void => {
 }
 
 let hintList: number[] = []
+/**
+ * 마우스 좌/우 동시 클릭시 힌트 체크 영역 표시
+ * @param {y} cell 좌표 y값
+ * @param {x} cell 좌표 x값
+ */
 const getHint = (y: number, x: number): void => {
   hintList = []
   if (!board.value[y][x].isOpen) {
-    isOpen(y, x)
+    cellCheck(y, x)
     return
   }
 
@@ -355,11 +379,12 @@ const getHint = (y: number, x: number): void => {
 
   nearCheck(y,x).forEach(index => {
     if (index > 0) {
-      const [y,x] = getCoord(index)
-      if (!board.value[y][x].isPin && !board.value[y][x].isOpen) {
-        board.value[y][x].ishint = true
+      const [cellY,cellX] = getCoord(index)
+      if (!board.value[cellY][cellX].isPin && !board.value[cellY][cellX].isOpen) {
+        board.value[cellY][cellX].ishint = true
         hintList.push(index)
-      } else if (board.value[y][x].isPin) {
+
+      } else if (board.value[cellY][cellX].isPin) {
         nearPin.push(index)
       }
     }
@@ -372,32 +397,34 @@ const getHint = (y: number, x: number): void => {
   if (nearPin.length === nearMine.length) {
     for (let i = 0; i < nearPin.length; i++) {
       if (nearPin[i] !== nearMine[i]) {
-        console.log('핀 잘못 꼽았다')
+        const [mineY, mineX] = getCoord(nearMine[i])
         isNearOpen = false
-        break;
+        cellOpen(mineY, mineX)
+        break
       }
     }
 
     if (isNearOpen) {
       hintList.forEach(index => {
         const [y, x] = getCoord(index)
-        isOpen(y, x)
+        cellOpen(y, x)
       })
     }
   }
 }
 
 let hint: boolean = false
-const cellMouseDown = (event: any, coord: number[]): void => {
-  let [y, x] = coord
-
-  if (event.button === 0 && event.buttons === 3 || event.button === 2 && event.buttons === 3) {
+const cellMouseDown = (event: any, y: number, x: number): void => {
+  const left = event.button === 0
+  const right = event.button === 2
+  const letftRight = event.buttons === 3
+  if (left && letftRight || right && letftRight) {
     hint = true
     if (board.value[y][x].isOpen) {
       getHint(y,x)
 
     } else {
-      isOpen(y, x)
+      cellCheck(y, x)
     }
 
   } else {
@@ -405,16 +432,15 @@ const cellMouseDown = (event: any, coord: number[]): void => {
   }
 }
 
-const cellMouseUp = (event: any, coord: number[]): void => {
-  let [y, x] = coord
+const cellMouseUp = (event: any, y: number, x: number): void => {
   if (hint) {
     hintList.forEach(index => {
-      const [y, x] = getCoord(index)
-      board.value[y][x].ishint = false
+      const [hintY, hintX] = getCoord(index)
+      board.value[hintY][hintX].ishint = false
     })
 
   } else if (event.button === 0 && event.buttons === 0) {
-    isOpen(y, x)
+    cellCheck(y, x)
 
   } else if (event.button === 2 && event.buttons === 0) {
     setPin(y, x)
@@ -461,15 +487,15 @@ const cellMouseUp = (event: any, coord: number[]): void => {
 
             <div
               :class="['grid', `level-${level}`, {'open': cell.isOpen}]"
-              @mousedown.prevent="cellMouseDown($event, [indexY, indexX])"
-              @mouseup.prevent="cellMouseUp($event, [indexY, indexX])"
+              @mousedown.prevent="cellMouseDown($event, indexY, indexX)"
+              @mouseup.prevent="cellMouseUp($event, indexY, indexX)"
               @contextmenu.prevent
               >
                 <div
                   class="hint"
                   v-if="cell.ishint && !cell.isOpen">
                 </div>
-                <i>{{ indexY * 9 + indexX }} [{{indexY}}, {{ indexX }}]</i>
+
                 <span
                   :class="['count', `count-${cell.mineCount}`]"
                   v-if="cell.mineCount > 0 && !cell.isMine && cell.isOpen">
